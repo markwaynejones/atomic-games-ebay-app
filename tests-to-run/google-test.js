@@ -26,7 +26,7 @@ describe("simple google test", function() {
         return result;
       })
       .then(function(rows) {
-        // Logs out a list of rows from db
+        // Logs out a list of rows from database
         console.log(rows[0].name);
         assert.equal(rows[0].name, "mark test");
       });
