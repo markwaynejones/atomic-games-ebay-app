@@ -1,0 +1,27 @@
+Version of npm = 5.6.0
+
+version of node = 8.11.4
+
+
+------------------
+
+
+Versions of all installed node modules
+
+
+-- webdriverio@4.13.2
+
+-- selenium-standalone@6.15.3
+
+-- wdio-spec-reporter@0.1.5
+
+-- wdio-junit-reporter@0.4.4
+
+-- wdio-phantomjs-service@0.2.2
+
+-- wdio-screenshot@0.6.0
+
+-- promise-mysql@3.3.1
+
+-- mysql@2.16.0
+
