@@ -1,0 +1,28 @@
+{
+  "name": "atomic-games",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "This project describes the package.json file in detail and explains what goes inside it.",
+  "keywords": [
+    "npm",
+    "package.json",
+    "node.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/markwaynejones/atomic-games-ebay-app.git"
+  },
+  "scripts": {},
+  "dependencies": {
+    "webdriverio": "4.13.2",
+    "selenium-standalone": "6.15.3",
+    "wdio-spec-reporter": "0.1.5",
+    "wdio-junit-reporter": "0.4.4",
+    "wdio-phantomjs-service": "0.2.2",
+    "wdio-screenshot": "0.6.0",
+    "promise-mysql": "3.3.1",
+    "mysql": "2.16.0",
+    "wdio-mocha-framework": "0.6.3"
+  },
+  "devDependencies": {}
+}
