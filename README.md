@@ -19,3 +19,20 @@ Finally, run the following command in the root of this codebase to start running
 ```
 ./node_modules/.bin/wdio config
 ```
+
+--------------
+
+This codebase also has a scotch box vagrant file which is inside the 'webfiles' folder on the root of this codebase.
+
+This allows us to view PHP files in a browser and also has its own database that we can use.
+
+To start scotch box, after cloning this codebase, git bash into the 'webfiles' folder and type:
+```
+$ vagrant up
+```
+
+Then, once the vagrant machine is up and running, go to the following URL
+
+http://192.168.33.10
+
+This URL will display all files that are in the '/webfiles/public' folder of this codebase.
