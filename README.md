@@ -1,8 +1,12 @@
 ## Getting Started
 
+First of all, ensure you have the following versions of node and npm installed on your machine
 
+version of node = 8.11.4
 
-Run the following command in the root of this codebase after cloning it
+version of npm = 5.6.0
+
+Then run the following command in the root of this codebase after cloning it
 
 ```
 npm install
@@ -10,7 +14,7 @@ npm install
 
 This will install all npm node module dependancies in the package.json file
 
-Then run the following command in the root of this codebase to start running your web scraper.
+Finally, run the following command in the root of this codebase to start running your web scraper.
 
 ```
 ./node_modules/.bin/wdio config
