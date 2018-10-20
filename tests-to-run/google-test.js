@@ -5,7 +5,8 @@ var allPsoneGames = getAllPsoneGames();
 
 var databaseConnection = false;
 
-var gameToSearch = "Crash Bandicoot";
+var gameToSearch = "crash bandicoot";
+var consoleToSearch = "ps1";
 
 var insertGameIntoDB;
 
@@ -69,7 +70,7 @@ describe("simple google test", function() {
     browser.pause(3000);
     console.log("got here 2");
 
-    var searchQuery = gameToSearch + " ps1";
+    var searchQuery = gameToSearch + " " + consoleToSearch;
 
     browser.setValue("#gh-ac", searchQuery);
 
@@ -203,6 +204,10 @@ describe("simple google test", function() {
         .element("//h3[contains(@class,'lvtitle')]")
         .getText();
 
+      var gameURL = gameTitles.value[index]
+        .element("//h3[contains(@class,'lvtitle')]//a")
+        .getAttribute("href");
+
       var soldPrice = gameTitles.value[index]
         .element(
           "//ul[contains(@class,'lvprices')]//li[contains(@class,'lvprice')]//span"
@@ -259,9 +264,10 @@ describe("simple google test", function() {
         console.log(
           "Not inserting game '" +
             gameHeading +
-            "' because it should already be inserted"
+            "' because it should already be inserted based on its time/date it was sold. Breaking out of loop."
         );
-        continue;
+        // continue;
+        break;
       }
 
       // console.log(gameHeading);
@@ -314,7 +320,7 @@ describe("simple google test", function() {
         var currentGame = allPsoneGames[i];
 
         // if currentGame == gameToSearch then skip current game
-        if (currentGame == gameToSearch) {
+        if (currentGame.toLowerCase() == gameToSearch.toLowerCase()) {
           continue;
         }
 
@@ -355,6 +361,27 @@ describe("simple google test", function() {
         console.log("Inserting below game into database");
         console.log(gameHeading);
         console.log("num bids: " + numberOfBids);
+        // console.log(
+        //   "insert into `sold-playstation-one-games` set `name` = '" +
+        //     gameHeading +
+        //     "', `description` = 'test description', `price-sold-for` = '" +
+        //     soldPrice +
+        //     "', `datetimesold` = '" +
+        //     soldDateTimestamp +
+        //     "', `number-of-bids` = '" +
+        //     numberOfBids +
+        //     "', `postage-cost` = '" +
+        //     postageCost +
+        //     "', `imageSrc` = '" +
+        //     largeImageSrc +
+        //     "', `searchquery` = '" +
+        //     searchQuery +
+        //     "', `gamename` = '" +
+        //     gameToSearch +
+        //     "', `console` = '" +
+        //     consoleToSearch +
+        //     "'"
+        // );
         console.log("------------------------------------");
 
         // insert into DB
@@ -371,6 +398,14 @@ describe("simple google test", function() {
             postageCost +
             "', `imageSrc` = '" +
             largeImageSrc +
+            "', `searchquery` = '" +
+            searchQuery +
+            "', `gamename` = '" +
+            gameToSearch +
+            "', `console` = '" +
+            consoleToSearch +
+            "', `ebayitemurl` = '" +
+            gameURL +
             "'"
         );
       } else {
