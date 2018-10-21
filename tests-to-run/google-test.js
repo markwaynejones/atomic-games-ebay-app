@@ -388,7 +388,7 @@ describe("simple google test", function() {
         databaseConnection.query(
           "insert into `sold-playstation-one-games` set `name` = '" +
             gameHeading +
-            "', `description` = 'test description', `price-sold-for` = '" +
+            "', `price-sold-for` = '" +
             soldPrice +
             "', `datetimesold` = '" +
             soldDateTimestamp +
