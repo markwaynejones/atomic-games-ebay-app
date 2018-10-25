@@ -30,6 +30,9 @@ For Example
 
 
 
+//////////////
+
+
 
 
 */
@@ -40,6 +43,8 @@ For Example
 ////////////////// start /////////////////
 
 $print_this = "PHP Works. Yay!";
+
+$all_game_ids_being_used_for_stats = array();
 
 // echo $print_this;
 // ini_set("mysqli.default_port", 3307);
@@ -71,7 +76,102 @@ $mysqli = new mysqli($servername, $username, $password, $dbname);
 if ($mysqli->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 } 
-echo "Connected successfully";
+// echo "Connected successfully";
+
+$allRowsGamesFiltered = getAllGamesToUseForStats();
+// die;
+
+
+/////// start of filter sql ///////////
+
+// Get all games that have the platinum filter (may not need `atomic-games`. parts of query)
+// $sql = "SELECT `sold-playstation-one-games`.name FROM `sold-playstation-one-games` 
+// INNER JOIN `games-to-tags` ON  `sold-playstation-one-games`.id = `games-to-tags`.game_id
+// INNER JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id
+// WHERE `tags`.name = 'platinum'";
+
+
+
+// // Get all games that have the platinum filter (may not need `atomic-games`. parts of query)
+
+// if(isset($_POST['tag'])){
+//     // print_r($_POST['tag']);
+//     // die;
+
+//     $filterSqlAppend = "";
+//     $filterSubQuery = "";
+
+//     foreach ($_POST['tag'] as $tag){
+//         $filterSqlAppend .= "`tags`.id != '".$tag."' AND ";
+//         $filterSubQuery .= "tag_id = '".$tag."' OR ";
+//     }
+
+//     $filterSqlAppend = substr($filterSqlAppend, 0, -5);
+//     $filterSubQuery = substr($filterSubQuery, 0, -4);
+
+//     // $sql = "SELECT `sold-playstation-one-games`.name FROM `sold-playstation-one-games` 
+//     // INNER JOIN `games-to-tags` ON  `sold-playstation-one-games`.id = `games-to-tags`.game_id
+//     // INNER JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id
+//     // WHERE ".$filterSqlAppend."
+//     // and game_id NOT IN (select game_id from `atomic-games`.`games-to-tags` where  tag_id = '3' or tag_id = '1')
+//     // ";
+
+//     $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id FROM `sold-playstation-one-games` 
+//     INNER JOIN `games-to-tags` ON  `sold-playstation-one-games`.id = `games-to-tags`.game_id
+//     INNER JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id
+//     WHERE ".$filterSqlAppend." 
+//     and game_id NOT IN (select game_id from `atomic-games`.`games-to-tags` where ".$filterSubQuery.")
+//     group by `games-to-tags`.game_id";
+
+//     // echo $sql;
+//     // echo "\n";
+//     // echo $sqlTwo; die;  
+    
+//     $resultFilter = $mysqli->query($sql);
+
+//     $allRowsGamesFiltered = $resultFilter->fetch_all(MYSQLI_ASSOC);
+
+//     // print_r($allRowsGamesFiltered);
+//     // die;
+
+// // die;
+
+// // $resultFilter = $mysqli->query($sql);
+
+// } else { // else no tags so just get all games in DB
+
+//     $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id FROM `sold-playstation-one-games`";
+
+//     $resultFilter = $mysqli->query($sql);
+
+//     $allRowsGamesFiltered = $resultFilter->fetch_all(MYSQLI_ASSOC);
+// }
+
+
+
+
+
+
+
+// if (!$result = $mysqli->query($sql)) {
+//     echo "Error: " . $mysqli->error . "\n";
+//     exit;
+// }
+
+// // Print out a list of games in the database
+// echo "<ul>\n";
+// while ($game = $resultFilter->fetch_assoc()) {
+//     echo "<li>";
+//     echo $game['name'];
+//     echo "</li>";
+// }
+// echo "</ul>\n";
+
+// die;
+
+//////// end of filter sql //////////
+
+
 
 $sql = "select * from `sold-playstation-one-games`";
 
@@ -227,6 +327,62 @@ function drawBasic() {
 </head>
 
 <body>
+
+<h1>Crash Bandicoot PS1</h1>
+
+<h3>Filters / Tags</h3>
+
+<form method="POST" action="http://192.168.33.10/ebay-tool.php">
+<ul>
+
+<?
+$allTags = getAllTags();
+
+foreach($allTags as $tag){ ?>
+    <? if(isset($_POST['tag'])){ ?>
+        <li><?=$tag['name'] ?> <input name="tag[]" value="<?=$tag['id'] ?>" type="checkbox" <? if(in_array($tag['id'], $_POST['tag'])){ ?> checked="checked" <? } ?> /></li>
+    <? } else{ ?>
+        <li><?=$tag['name'] ?> <input name="tag[]" value="<?=$tag['id'] ?>" type="checkbox" /></li>
+    <? } ?>
+<? }
+?>
+<br />
+<input type="submit" value="Submit Filters" />
+</form>
+</ul>
+
+<hr />
+
+<? // if(isset($_POST['tag'])){ ?>
+
+<h3>Games being used for stats based on filters chosen</h3>
+
+<? foreach($allRowsGamesFiltered as $game){ 
+    echo $game['id'].": ".$game['name'].'<br />'; 
+ } ?>
+
+ <br />
+
+
+
+<hr />
+
+<? // } ?>
+
+<h3>Summary of items sold</h3>
+
+<p><strong>Number of items sold:</strong><?php echo count($allRowsGamesFiltered); ?></p>
+
+<p><strong>:</strong><?php echo ''; ?></p>
+
+<p><strong>:</strong><?php echo ''; ?></p>
+
+<p><strong>:</strong><?php echo ''; ?></p>
+
+<p><strong>:</strong><?php echo ''; ?></p>
+
+<hr />
+
 <div id="piechart" style="width: 900px; height: 500px;"></div>
 
 <div id="linechart_material" style="width: 900px; height: 500px;"></div>
@@ -305,6 +461,86 @@ function getAveragePricesForMonth($month, $year) {
     // die;
 
     return $average_prices;
+
+}
+
+function getAllTags() {
+
+    global $mysqli;
+
+    $sql = "SELECT * FROM tags";
+    
+    $resultFilter = $mysqli->query($sql);
+    $allRows = $resultFilter->fetch_all(MYSQLI_ASSOC);
+
+    return $allRows;
+
+    // print_r($allRows);
+    // die;
+    
+    // if (!$result = $mysqli->query($sql)) {
+    //     echo "Error: " . $mysqli->error . "\n";
+    //     exit;
+    // }
+    
+    // // Print out a list of games in the database
+    // echo "<ul>\n";
+    // while ($game = $resultFilter->fetch_assoc()) {
+    //     echo "<li>";
+    //     echo $game['name'];
+    //     echo "</li>";
+    // }
+    // echo "</ul>\n";
+
+}
+
+function getAllGamesToUseForStats() {
+
+    global $mysqli;
+
+    // Get all games that don't have specific tags/filters associated to them
+    if(isset($_POST['tag'])){
+
+        $filterSqlAppend = "";
+        $filterSubQuery = "";
+
+        foreach ($_POST['tag'] as $tag){
+            $filterSqlAppend .= "`tags`.id != '".$tag."' AND ";
+            $filterSubQuery .= "tag_id = '".$tag."' OR ";
+        }
+
+        $filterSqlAppend = substr($filterSqlAppend, 0, -5);
+        $filterSubQuery = substr($filterSubQuery, 0, -4);
+
+        $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id FROM `sold-playstation-one-games` 
+        INNER JOIN `games-to-tags` ON  `sold-playstation-one-games`.id = `games-to-tags`.game_id
+        INNER JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id
+        WHERE ".$filterSqlAppend." 
+        and game_id NOT IN (select game_id from `atomic-games`.`games-to-tags` where ".$filterSubQuery.")
+        group by `games-to-tags`.game_id";
+
+        $resultFilter = $mysqli->query($sql);
+
+        $allRowsGamesFiltered = $resultFilter->fetch_all(MYSQLI_ASSOC);
+
+    } else { // else no tags so just get all games in DB
+
+        $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id FROM `sold-playstation-one-games`";
+
+        $resultFilter = $mysqli->query($sql);
+
+        $allRowsGamesFiltered = $resultFilter->fetch_all(MYSQLI_ASSOC);
+    }
+
+    foreach($allRowsGamesFiltered as $game) {
+        $all_game_ids_being_used_for_stats[] = $game['id'];
+    }
+
+    // print_r($all_game_ids_being_used_for_stats);
+    // die;
+
+    return $allRowsGamesFiltered;
+
 
 }
 
