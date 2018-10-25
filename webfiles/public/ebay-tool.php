@@ -28,27 +28,12 @@ For Example
 100 - 6 = 94% chance of making a profit on this game if bought at £6
 
 
-
-
-//////////////
-
-
-
-
 */
 
-// phpinfo();
-
-
-////////////////// start /////////////////
 
 $print_this = "PHP Works. Yay!";
 
 $all_game_ids_being_used_for_stats = array();
-
-// echo $print_this;
-// ini_set("mysqli.default_port", 3307);
-// echo ini_get("mysqli.default_port");
 
 // below details work for database on scotchbox
 $servername = "localhost";
@@ -56,21 +41,8 @@ $username = "root";
 $password = "root";
 $dbname = "atomic-games";
 
-// 192.168.0.1
-// 10.0.2.2
-// 192.168.10.1
-// $servername = "10.0.2.2";
-// $username = "root";
-// $password = "984367";
-// $dbname = "atomic-games";
-
-// $dbname = "scotchbox";
-// $port = 3307;
-
 // Create connection
 $mysqli = new mysqli($servername, $username, $password, $dbname);
-
-// echo ini_get("mysqli.default_port");
 
 // Check connection
 if ($mysqli->connect_error) {
@@ -78,142 +50,62 @@ if ($mysqli->connect_error) {
 } 
 // echo "Connected successfully";
 
+// below variable has all the games details to use for stats in one array (add more columns to sql in this function when and if need to)
+/*
+e.g. of what would be in variable
+
+Array
+(
+    [0] => Array
+        (
+            [name] => Crash Bandicoot (Big Box) | Sony PlayStation 1 PS1 | Tested Complete | PAL UK
+            [id] => 18
+            [price] => 22.55
+        )
+
+    [1] => Array
+        (
+            [name] => Crash Bandicoot big box ps1
+            [id] => 32
+            [price] => 20.85
+        )
+
+)
+
+*/
 $allRowsGamesFiltered = getAllGamesToUseForStats();
-// die;
 
+$priceMatrixArray = array(
+    '5' => 0,
+    '10' => 0,
+    '15' => 0,
+    '20' => 0,
+    '25' => 0,
+    '100000' => 0
+);
 
-/////// start of filter sql ///////////
+foreach ($allRowsGamesFiltered as $gameDetails) {
 
-// Get all games that have the platinum filter (may not need `atomic-games`. parts of query)
-// $sql = "SELECT `sold-playstation-one-games`.name FROM `sold-playstation-one-games` 
-// INNER JOIN `games-to-tags` ON  `sold-playstation-one-games`.id = `games-to-tags`.game_id
-// INNER JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id
-// WHERE `tags`.name = 'platinum'";
+    foreach($priceMatrixArray as $priceRange => $amountOfGames) {
 
+        // if last one then must fit into last price range (make more dynamic when get time)
+        if ($priceRange == '100000') {
+            $priceMatrixArray[$priceRange]++;
+            break;
+        }
 
+        // if this price falls into this price range then increment the number of games at this price range and continue onto next game
+        if ($gameDetails['price'] <= $priceRange) {
+            $priceMatrixArray[$priceRange]++;
+            break;
+        }
 
-// // Get all games that have the platinum filter (may not need `atomic-games`. parts of query)
+    }
 
-// if(isset($_POST['tag'])){
-//     // print_r($_POST['tag']);
-//     // die;
-
-//     $filterSqlAppend = "";
-//     $filterSubQuery = "";
-
-//     foreach ($_POST['tag'] as $tag){
-//         $filterSqlAppend .= "`tags`.id != '".$tag."' AND ";
-//         $filterSubQuery .= "tag_id = '".$tag."' OR ";
-//     }
-
-//     $filterSqlAppend = substr($filterSqlAppend, 0, -5);
-//     $filterSubQuery = substr($filterSubQuery, 0, -4);
-
-//     // $sql = "SELECT `sold-playstation-one-games`.name FROM `sold-playstation-one-games` 
-//     // INNER JOIN `games-to-tags` ON  `sold-playstation-one-games`.id = `games-to-tags`.game_id
-//     // INNER JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id
-//     // WHERE ".$filterSqlAppend."
-//     // and game_id NOT IN (select game_id from `atomic-games`.`games-to-tags` where  tag_id = '3' or tag_id = '1')
-//     // ";
-
-//     $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id FROM `sold-playstation-one-games` 
-//     INNER JOIN `games-to-tags` ON  `sold-playstation-one-games`.id = `games-to-tags`.game_id
-//     INNER JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id
-//     WHERE ".$filterSqlAppend." 
-//     and game_id NOT IN (select game_id from `atomic-games`.`games-to-tags` where ".$filterSubQuery.")
-//     group by `games-to-tags`.game_id";
-
-//     // echo $sql;
-//     // echo "\n";
-//     // echo $sqlTwo; die;  
-    
-//     $resultFilter = $mysqli->query($sql);
-
-//     $allRowsGamesFiltered = $resultFilter->fetch_all(MYSQLI_ASSOC);
-
-//     // print_r($allRowsGamesFiltered);
-//     // die;
-
-// // die;
-
-// // $resultFilter = $mysqli->query($sql);
-
-// } else { // else no tags so just get all games in DB
-
-//     $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id FROM `sold-playstation-one-games`";
-
-//     $resultFilter = $mysqli->query($sql);
-
-//     $allRowsGamesFiltered = $resultFilter->fetch_all(MYSQLI_ASSOC);
-// }
-
-
-
-
-
-
-
-// if (!$result = $mysqli->query($sql)) {
-//     echo "Error: " . $mysqli->error . "\n";
-//     exit;
-// }
-
-// // Print out a list of games in the database
-// echo "<ul>\n";
-// while ($game = $resultFilter->fetch_assoc()) {
-//     echo "<li>";
-//     echo $game['name'];
-//     echo "</li>";
-// }
-// echo "</ul>\n";
-
-// die;
-
-//////// end of filter sql //////////
-
-
-
-$sql = "select * from `sold-playstation-one-games`";
-
-if (!$result = $mysqli->query($sql)) {
-    // Oh no! The query failed. 
-    echo "Sorry, the website is experiencing problems.";
-
-    // Again, do not do this on a public site, but we'll show you how
-    // to get the error information
-    echo "Error: Our query failed to execute and here is why: \n";
-    echo "Query: " . $sql . "\n";
-    echo "Errno: " . $mysqli->errno . "\n";
-    echo "Error: " . $mysqli->error . "\n";
-    exit;
 }
 
-// Phew, we made it. We know our MySQL connection and query 
-// succeeded, but do we have a result?
-if ($result->num_rows === 0) {
-    // Oh, no rows! Sometimes that's expected and okay, sometimes
-    // it is not. You decide. In this case, maybe actor_id was too
-    // large? 
-    echo "We could not find a match for ID $aid, sorry about that. Please try again.";
-    exit;
-}
-
-// Print out a list of games in the database
-// echo "<ul>\n";
-// while ($game = $result->fetch_assoc()) {
-//     echo "<li>";
-//     echo $game['name'];
-//     echo "<ul>";
-//         echo "<li>".$game['description']."</li>";
-//         echo "<li>&pound;".$game['price-sold-for']."</li>";
-//     echo "</ul>";
-//     echo "</li>";
-// }
-// echo "</ul>\n";
-
-
-/////////////////////// end //////////////////
-
+// print_r($priceMatrixArray);
+// die;
 
 $markTest = "hello mark";
 $average_prices = getAveragePricesForMonth('October', '2018')
@@ -234,27 +126,18 @@ google.charts.load('current', {
 
       function drawChart() {
 
-        // var data = google.visualization.arrayToDataTable([
-        //   ['Task', 'Hours per Day'],
-        //   ['Work',     10],
-        //   ['Eat',      0],
-        //   ['Commute',  4],
-        //   ['Watch TV', 2],
-        //   ['Sleep',    7]
-        // ]);
-
         var data = google.visualization.arrayToDataTable([
           ['Amount Sold For', 'Number of Games Sold'],
-          ['£0-£5',     10],
-          ['£5-£10',      0],
-          ['£10-£15',  4],
-          ['£15-£20', 2],
-          ['£20-£25',    7],
-          ['Greater than £25',    8]
+          ['£0-£5',     <?=$priceMatrixArray['5'] ?>],
+          ['£5-£10',      <?=$priceMatrixArray['10'] ?>],
+          ['£10-£15',  <?=$priceMatrixArray['15'] ?>],
+          ['£15-£20', <?=$priceMatrixArray['20'] ?>],
+          ['£20-£25',    <?=$priceMatrixArray['25'] ?>],
+          ['Greater than £25',    <?=$priceMatrixArray['100000'] ?>]
         ]);
 
         var options = {
-          title: 'My Daily Activities'
+          title: 'Price Crash Bandicoot Games Sold For In October 2018'
         };
 
         var chart = new google.visualization.PieChart(document.getElementById('piechart'));
@@ -262,24 +145,13 @@ google.charts.load('current', {
         chart.draw(data, options);
       }
 
-
-// google.charts.load('current', {'packages':['line']});
 google.charts.setOnLoadCallback(drawBasic);
 
 function drawBasic() {
 
-    // var alertMessage = '<?php echo 'php worked' ?>';
-    
-    // alert(alertMessage);
-
       var data = new google.visualization.DataTable();
       data.addColumn('number', 'Day of the Month');
-      data.addColumn('number', 'Price Crash Bandicoot Sold For');
-
-    //   ['day sold','average price']
-    //   data.addRows([
-    //     [0, 0],   [1, 10],  [2, 23]
-    //   ]);
+      data.addColumn('number', 'Average price Crash Bandicoot sold for on this day');
 
       data.addRows([
         <?php foreach($average_prices as $day => $price_array) { 
@@ -302,8 +174,8 @@ function drawBasic() {
 
       var options = {
         chart: {
-          title: 'Average Price Game Sold For In October 2018',
-          subtitle: 'in pounds (£)'
+          title: 'Average Price Game Sold For On Each Day In October 2018',
+          subtitle: 'price at each point is average of all crash bandicoot 1 games that were sold on that day along with the day of the month it was sold'
         },
         vAxis: {
             format: 'currency',
@@ -332,6 +204,8 @@ function drawBasic() {
 
 <h3>Filters / Tags</h3>
 
+<p>Please select filters to remove any games that are associated with that filter from the results.</p>
+
 <form method="POST" action="http://192.168.33.10/ebay-tool.php">
 <ul>
 
@@ -355,7 +229,7 @@ foreach($allTags as $tag){ ?>
 
 <? // if(isset($_POST['tag'])){ ?>
 
-<h3>Games being used for stats based on filters chosen</h3>
+<h3>Games being used for stats</h3>
 
 <? foreach($allRowsGamesFiltered as $game){ 
     echo $game['id'].": ".$game['name'].'<br />'; 
@@ -363,23 +237,14 @@ foreach($allTags as $tag){ ?>
 
  <br />
 
-
-
 <hr />
 
-<? // } ?>
 
 <h3>Summary of items sold</h3>
 
 <p><strong>Number of items sold:</strong><?php echo count($allRowsGamesFiltered); ?></p>
 
-<p><strong>:</strong><?php echo ''; ?></p>
-
-<p><strong>:</strong><?php echo ''; ?></p>
-
-<p><strong>:</strong><?php echo ''; ?></p>
-
-<p><strong>:</strong><?php echo ''; ?></p>
+<!-- <p><strong>:</strong><?php //echo ''; ?></p> -->
 
 <hr />
 
@@ -398,12 +263,10 @@ foreach($allTags as $tag){ ?>
 function getAveragePricesForMonth($month, $year) {
 
     global $mysqli;
-
+    global $all_game_ids_being_used_for_stats;
 
     // get list of games sold in a specific month and year (date_formatted = day in the month it was sold with leading zeros e.g. 07, 09, 13)
-    $sql = "select `price-sold-for`, from_unixtime(datetimesold,'%e') as date_formatted from `sold-playstation-one-games` where MONTHNAME(from_unixtime(datetimesold)) = '".$month."' and Year(from_unixtime(datetimesold)) = '".$year."' ORDER by datetimesold";
-    // $sql = "select `price-sold-for`, from_unixtime(datetimesold,'%e') as date_formatted from `sold-playstation-one-games`";
-    // $sql = "select `price-sold-for`, from_unixtime(datetimesold,'%e') as date_formatted from `sold-playstation-one-games`";
+    $sql = "select `id`, `price-sold-for`, from_unixtime(datetimesold,'%e') as date_formatted from `sold-playstation-one-games` where MONTHNAME(from_unixtime(datetimesold)) = '".$month."' and Year(from_unixtime(datetimesold)) = '".$year."' ORDER by datetimesold";
 
     $result = $mysqli->query($sql);
 
@@ -419,27 +282,18 @@ function getAveragePricesForMonth($month, $year) {
         echo "Error: " . $mysqli->error . "\n";
         exit;
     }
-    
-
-    // var_dump($result); die;
-    
 
     $average_prices = array();
 
     for($i = 1; $i <= 31; $i++) {
-
         $average_prices[$i] = array();
-
     }
 
-
-
-
-
     while ($game = $result->fetch_assoc()) {
+        // if current game is being filtered out then don't add to stat graphs
+        if(!in_array($game['id'], $all_game_ids_being_used_for_stats)) continue;
 
         $average_prices[$game['date_formatted']][] = $game['price-sold-for'];
-
     }
 
     foreach($average_prices as $day => $priceArray) {
@@ -452,13 +306,8 @@ function getAveragePricesForMonth($month, $year) {
             $totalSold++;
         }
 
-        $average_prices[$day]['average_price'] = round($totalPrice / $totalSold);
-
+        $average_prices[$day]['average_price'] = round($totalPrice / $totalSold,2);
     }
-
-    // print_r($average_prices);
-
-    // die;
 
     return $average_prices;
 
@@ -474,29 +323,12 @@ function getAllTags() {
     $allRows = $resultFilter->fetch_all(MYSQLI_ASSOC);
 
     return $allRows;
-
-    // print_r($allRows);
-    // die;
-    
-    // if (!$result = $mysqli->query($sql)) {
-    //     echo "Error: " . $mysqli->error . "\n";
-    //     exit;
-    // }
-    
-    // // Print out a list of games in the database
-    // echo "<ul>\n";
-    // while ($game = $resultFilter->fetch_assoc()) {
-    //     echo "<li>";
-    //     echo $game['name'];
-    //     echo "</li>";
-    // }
-    // echo "</ul>\n";
-
 }
 
 function getAllGamesToUseForStats() {
 
     global $mysqli;
+    global $all_game_ids_being_used_for_stats;
 
     // Get all games that don't have specific tags/filters associated to them
     if(isset($_POST['tag'])){
@@ -512,12 +344,31 @@ function getAllGamesToUseForStats() {
         $filterSqlAppend = substr($filterSqlAppend, 0, -5);
         $filterSubQuery = substr($filterSubQuery, 0, -4);
 
-        $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id FROM `sold-playstation-one-games` 
-        INNER JOIN `games-to-tags` ON  `sold-playstation-one-games`.id = `games-to-tags`.game_id
-        INNER JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id
-        WHERE ".$filterSqlAppend." 
-        and game_id NOT IN (select game_id from `atomic-games`.`games-to-tags` where ".$filterSubQuery.")
-        group by `games-to-tags`.game_id";
+        /* Below commentted out sql works better than one below it
+        SELECT `sold-playstation-one-games`.id, `sold-playstation-one-games`.name, `sold-playstation-one-games`.id, `sold-playstation-one-games`.`price-sold-for` as price, `games-to-tags`.tag_id
+        FROM `atomic-games`.`sold-playstation-one-games` 
+        LEFT JOIN `atomic-games`.`games-to-tags` ON `sold-playstation-one-games`.id = `games-to-tags`.game_id 
+        LEFT JOIN `atomic-games`.`tags` ON `games-to-tags`.tag_id = `tags`.id 
+        WHERE (`games-to-tags`.`tag_id` != '3' OR `games-to-tags`.`tag_id` IS NULL) 
+        AND `sold-playstation-one-games`.id NOT IN (select game_id from `atomic-games`.`games-to-tags` where tag_id = '3') 
+        group by `sold-playstation-one-games`.id
+        */
+
+        $sql = "SELECT `sold-playstation-one-games`.id, `sold-playstation-one-games`.name, `sold-playstation-one-games`.id, `sold-playstation-one-games`.`price-sold-for` as price, `games-to-tags`.tag_id
+        FROM `sold-playstation-one-games` 
+        LEFT JOIN `games-to-tags` ON `sold-playstation-one-games`.id = `games-to-tags`.game_id 
+        LEFT JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id 
+        WHERE (".$filterSqlAppend." OR `games-to-tags`.`tag_id` IS NULL)
+        AND `sold-playstation-one-games`.id NOT IN (select game_id from `games-to-tags` where ".$filterSubQuery.") 
+        group by `sold-playstation-one-games`.id";
+    
+
+        // $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id, `sold-playstation-one-games`.`price-sold-for` as price FROM `sold-playstation-one-games` 
+        // INNER JOIN `games-to-tags` ON  `sold-playstation-one-games`.id = `games-to-tags`.game_id
+        // INNER JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id
+        // WHERE ".$filterSqlAppend." 
+        // and game_id NOT IN (select game_id from `atomic-games`.`games-to-tags` where ".$filterSubQuery.")
+        // group by `games-to-tags`.game_id";
 
         $resultFilter = $mysqli->query($sql);
 
@@ -525,7 +376,7 @@ function getAllGamesToUseForStats() {
 
     } else { // else no tags so just get all games in DB
 
-        $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id FROM `sold-playstation-one-games`";
+        $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id, `sold-playstation-one-games`.`price-sold-for` as price FROM `sold-playstation-one-games`";
 
         $resultFilter = $mysqli->query($sql);
 
@@ -536,12 +387,11 @@ function getAllGamesToUseForStats() {
         $all_game_ids_being_used_for_stats[] = $game['id'];
     }
 
-    // print_r($all_game_ids_being_used_for_stats);
-    // die;
+    // echo $sql; die;
+
+    // print_r($allRowsGamesFiltered); die;
 
     return $allRowsGamesFiltered;
-
-
 }
 
 ?>
