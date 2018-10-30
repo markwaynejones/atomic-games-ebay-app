@@ -29,7 +29,7 @@ describe("simple google test", function() {
       .createConnection({
         host: "127.0.0.1",
         user: "root",
-        password: "984367",
+        password: "",
         database: "atomic-games"
       })
       .then(function(conn) {
