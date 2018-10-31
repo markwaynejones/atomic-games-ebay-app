@@ -31,6 +31,23 @@ For Example
 */
 
 
+/// new
+// if(isset($_POST['label_type'])){
+
+
+//     if($_POST['label_type'] == 'all' && $_POST['item_complete'] == 'all') {
+//         echo 'No filters chosen so just get all games.';
+//         die;
+//     }
+//     // label_type
+//     // item_complete
+
+//     print_r($_POST);
+//     die;
+// }
+
+// /// end new
+
 $print_this = "PHP Works. Yay!";
 
 $all_game_ids_being_used_for_stats = array();
@@ -206,26 +223,47 @@ function drawBasic() {
 
 <h3>Filters / Tags</h3>
 
-<p>Please select filters to remove any games that are associated with that filter from the results.</p>
+<p>Please select filters below.</p>
 
 <form method="POST" action="http://atomic-games/">
-<ul>
 
-<?
-$allTags = getAllTags();
+<p style="margin-bottom:5px;"><strong>Label Type</strong></p>
 
-foreach($allTags as $tag){ ?>
-    <? if(isset($_POST['tag'])){ ?>
-        <li><?=$tag['name'] ?> <input name="tag[]" value="<?=$tag['id'] ?>" type="checkbox" <? if(in_array($tag['id'], $_POST['tag'])){ ?> checked="checked" <? } ?> /></li>
-    <? } else{ ?>
-        <li><?=$tag['name'] ?> <input name="tag[]" value="<?=$tag['id'] ?>" type="checkbox" /></li>
-    <? } ?>
-<? }
-?>
+<p style="padding-top:0px;margin-top:0px;">All: <input type="radio" name="label_type" value="all" <? if(!isset($_POST['label_type']) || $_POST['label_type'] == 'all'){ ?>checked="checked" <? } ?> /><br />Black Label: <input type="radio" name="label_type" value="black" <? if(isset($_POST['label_type']) && $_POST['label_type'] == 'black'){ ?>checked="checked" <? } ?> /><br />Platinum: <input type="radio" name="label_type" value="platinum" <? if(isset($_POST['label_type']) && $_POST['label_type'] == 'platinum'){ ?>checked="checked" <? } ?> /></p>
+
+<p style="margin-bottom:5px;"><strong>Completion Type</strong></p>
+
+<p style="padding-top:0px;margin-top:0px;">All: <input type="radio" name="item_complete" value="all" <? if(!isset($_POST['item_complete']) || $_POST['item_complete'] == 'all'){ ?>checked="checked" <? } ?> /><br />Complete: <input type="radio" name="item_complete" value="1" <? if(isset($_POST['item_complete']) && $_POST['item_complete'] == '1'){ ?>checked="checked" <? } ?> /><br />Incomplete: <input type="radio" name="item_complete" value="0" <? if(isset($_POST['item_complete']) && $_POST['item_complete'] == '0'){ ?>checked="checked" <? } ?> /></p>
+
 <br />
-<input type="submit" value="Remove games with these tags" />
+<input style="display:block;" type="submit" value="Filter Results" />
+<br />
+
+<? if(isset($_POST['label_type'])){ ?>
+    <p><strong>Filters Chosen</strong></p>
+
+    <? 
+    
+    $nameMatrix = array(
+        "all" => "All",
+        "black" => "Black Label",
+        "platinum" => "Platinum",
+        "1" => "Complete",
+        "0" => "Incomplete"
+    );
+
+    ?>
+
+    <ul>
+        <li><strong>Label Type:</strong> <?=$nameMatrix[$_POST['label_type']]; ?></li>
+        <li><strong>Completion Type:</strong> <?=$nameMatrix[$_POST['item_complete']]; ?></li>
+    </ul>
+
+    <br />
+
+<? } ?>
+
 </form>
-</ul>
 
 <hr />
 
@@ -332,58 +370,25 @@ function getAllGamesToUseForStats() {
     global $mysqli;
     global $all_game_ids_being_used_for_stats;
 
-    // Get all games that don't have specific tags/filters associated to them
-    if(isset($_POST['tag'])){
 
-        $filterSqlAppend = "";
-        $filterSubQuery = "";
-
-        foreach ($_POST['tag'] as $tag){
-            $filterSqlAppend .= "`tags`.id != '".$tag."' AND ";
-            $filterSubQuery .= "tag_id = '".$tag."' OR ";
+        // if getting all games as no filters have been chosen
+        if ((!isset($_POST['label_type']) || ($_POST['label_type'] == 'all' && $_POST['item_complete'] == 'all'))) {
+            $sql = "SELECT *, `sold-playstation-one-games`.`price-sold-for` as price FROM `sold-playstation-one-games`";
+        } elseif($_POST['label_type'] != 'all' && $_POST['item_complete'] != 'all') { // else need to filter by both 'item_complete' and 'label_type'
+            $sql = "SELECT *, `sold-playstation-one-games`.`price-sold-for` as price FROM `sold-playstation-one-games` WHERE `complete` = '".$_POST['item_complete']."' AND `labeltype` = '".$_POST['label_type']."'";
+        } elseif($_POST['label_type'] != 'all') { // else just filter by one type (label_type)
+            $sql = "SELECT *, `sold-playstation-one-games`.`price-sold-for` as price FROM `sold-playstation-one-games` WHERE `labeltype` = '".$_POST['label_type']."'";
+        } else { // else just filter by one type (item_complete)
+            $sql = "SELECT *, `sold-playstation-one-games`.`price-sold-for` as price FROM `sold-playstation-one-games` WHERE `complete` = '".$_POST['item_complete']."'";
         }
 
-        $filterSqlAppend = substr($filterSqlAppend, 0, -5);
-        $filterSubQuery = substr($filterSubQuery, 0, -4);
+        echo $sql;
 
-        /* Below commentted out sql works better than one below it
-        SELECT `sold-playstation-one-games`.id, `sold-playstation-one-games`.name, `sold-playstation-one-games`.id, `sold-playstation-one-games`.`price-sold-for` as price, `games-to-tags`.tag_id
-        FROM `atomic-games`.`sold-playstation-one-games` 
-        LEFT JOIN `atomic-games`.`games-to-tags` ON `sold-playstation-one-games`.id = `games-to-tags`.game_id 
-        LEFT JOIN `atomic-games`.`tags` ON `games-to-tags`.tag_id = `tags`.id 
-        WHERE (`games-to-tags`.`tag_id` != '3' OR `games-to-tags`.`tag_id` IS NULL) 
-        AND `sold-playstation-one-games`.id NOT IN (select game_id from `atomic-games`.`games-to-tags` where tag_id = '3') 
-        group by `sold-playstation-one-games`.id
-        */
+        $resultFilter = $mysqli->query($sql);
 
-        $sql = "SELECT `sold-playstation-one-games`.id, `sold-playstation-one-games`.name, `sold-playstation-one-games`.id, `sold-playstation-one-games`.`price-sold-for` as price, `games-to-tags`.tag_id
-        FROM `sold-playstation-one-games` 
-        LEFT JOIN `games-to-tags` ON `sold-playstation-one-games`.id = `games-to-tags`.game_id 
-        LEFT JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id 
-        WHERE (".$filterSqlAppend." OR `games-to-tags`.`tag_id` IS NULL)
-        AND `sold-playstation-one-games`.id NOT IN (select game_id from `games-to-tags` where ".$filterSubQuery.") 
-        group by `sold-playstation-one-games`.id";
+        $allRowsGamesFiltered = $resultFilter->fetch_all(MYSQLI_ASSOC);
+
     
-
-        // $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id, `sold-playstation-one-games`.`price-sold-for` as price FROM `sold-playstation-one-games` 
-        // INNER JOIN `games-to-tags` ON  `sold-playstation-one-games`.id = `games-to-tags`.game_id
-        // INNER JOIN `tags` ON `games-to-tags`.tag_id = `tags`.id
-        // WHERE ".$filterSqlAppend." 
-        // and game_id NOT IN (select game_id from `atomic-games`.`games-to-tags` where ".$filterSubQuery.")
-        // group by `games-to-tags`.game_id";
-
-        $resultFilter = $mysqli->query($sql);
-
-        $allRowsGamesFiltered = $resultFilter->fetch_all(MYSQLI_ASSOC);
-
-    } else { // else no tags so just get all games in DB
-
-        $sql = "SELECT `sold-playstation-one-games`.name, `sold-playstation-one-games`.id, `sold-playstation-one-games`.`price-sold-for` as price FROM `sold-playstation-one-games`";
-
-        $resultFilter = $mysqli->query($sql);
-
-        $allRowsGamesFiltered = $resultFilter->fetch_all(MYSQLI_ASSOC);
-    }
 
     foreach($allRowsGamesFiltered as $game) {
         $all_game_ids_being_used_for_stats[] = $game['id'];
