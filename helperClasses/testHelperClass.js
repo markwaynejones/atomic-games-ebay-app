@@ -26,6 +26,68 @@ module.exports = function TestHelperClass(browserClass) {
     // may need a wait for visible here
   };
 
+  this.getLabelType = function(gameHeading) {
+    var platinum = gameHeading.includes("platinum");
+
+    if (platinum == true) {
+      return "platinum";
+    } else {
+      return "black";
+    }
+  };
+
+  this.isComplete = function(gameHeading) {
+    var gameMissingStuff = false;
+
+    gameHeading = gameHeading.toLowerCase();
+
+    var wordsToCheck = [
+      "disc only",
+      "no instructions",
+      "no manual",
+      "incomplete"
+    ];
+
+    for (i = 0; i < wordsToCheck.length; i++) {
+      gameMissingStuff = gameHeading.includes(wordsToCheck[i]);
+
+      if (gameMissingStuff == true) {
+        break;
+      }
+    }
+
+    if (gameMissingStuff == true) {
+      return 0;
+    } else {
+      // else game is complete
+      return 1;
+    }
+  };
+
+  this.getTodaysDate = function() {
+    var now = new Date();
+
+    var month = new Array();
+    month[0] = "January";
+    month[1] = "February";
+    month[2] = "March";
+    month[3] = "April";
+    month[4] = "May";
+    month[5] = "June";
+    month[6] = "July";
+    month[7] = "August";
+    month[8] = "September";
+    month[9] = "October";
+    month[10] = "November";
+    month[11] = "December";
+
+    var month = month[now.getMonth()];
+
+    var dateNow = now.getDate() + " " + month + " " + now.getFullYear();
+
+    return dateNow;
+  };
+
   this.chooseFiltersInSidebar = function() {
     console.log("Choosing Filters in sidebar");
 
@@ -164,6 +226,24 @@ module.exports = function TestHelperClass(browserClass) {
     return soldPrice;
   };
 
+  this.checkRejectItem = function(gameHeading) {
+    gameHeading = gameHeading.toLowerCase();
+
+    var rejectGame = false;
+
+    var wordsToReject = ["joblot", "job lot", "bundle"];
+
+    for (i = 0; i < wordsToReject.length; i++) {
+      // does the game heading have any reject words and if so then dont insert into DB
+      rejectGame = gameHeading.includes(wordsToReject[i]);
+
+      if (rejectGame == true) {
+        break;
+      }
+    }
+    return rejectGame;
+  };
+
   this.getPostageCost = function(gameElement) {
     var postageCost = gameElement
       .element(
@@ -215,6 +295,16 @@ module.exports = function TestHelperClass(browserClass) {
     return largeImageSrc;
   };
 
+  this.getSoldDateString = function(gameElement) {
+    var soldDate = gameElement
+      .element(
+        "//ul[contains(@class,'lvdetails')]//li[contains(@class,'timeleft')]//span[contains(@class,'tme')]//span"
+      )
+      .getText();
+
+    return soldDate;
+  };
+
   this.getSoldDateTimestamp = function(gameElement) {
     var soldDate = gameElement
       .element(
@@ -236,6 +326,26 @@ module.exports = function TestHelperClass(browserClass) {
   };
 
   this.checkIfWeShouldStoreGameInDB = function(gameHeading, gameToSearch) {
+    // below few lines adds spaces to game heading for this game in case
+    // heading didnt have a space as was adding games like crashbandicoot warped when it shouldn't have
+    gameToSearchNoSpaces = gameToSearch.replace(" ", "");
+    gameHeadingLowerCase = gameHeading.toLowerCase();
+    console.log(
+      "Is " + gameToSearchNoSpaces + " inside " + gameHeadingLowerCase
+    );
+    if (gameHeadingLowerCase.includes(gameToSearchNoSpaces)) {
+      gameHeading = gameHeadingLowerCase.replace(
+        gameToSearchNoSpaces,
+        gameToSearch
+      );
+      console.log(
+        "yes it is so replacing game heading to be the following instead: "
+      );
+      console.log(gameHeading);
+    } else {
+      console.log("no it isnt in there");
+    }
+
     var gameHeadingReplacedSpecialChars = gameHeading;
 
     var allPsoneGames = this.getAllPsoneGames();

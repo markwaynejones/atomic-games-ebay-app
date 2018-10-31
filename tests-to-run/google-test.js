@@ -74,6 +74,18 @@ describe("simple google test", function() {
 
       var gameHeading = testHelper.getGameHeading(currentGameElement);
 
+      var rejectGame = testHelper.checkRejectItem(gameHeading);
+
+      if (rejectGame == true) {
+        console.log(
+          "Rejecting the following ebay item/game has it includes words to reject in its heading:"
+        );
+        console.log(gameHeading);
+        console.log("Moving onto next ebay item");
+        console.log("--------------------");
+        continue;
+      }
+
       var gameURL = testHelper.getGameURL(currentGameElement);
 
       var soldPrice = testHelper.getSoldPrice(currentGameElement);
@@ -84,9 +96,14 @@ describe("simple google test", function() {
 
       var imageSrc = testHelper.getImageSrc(currentGameElement);
 
+      var labelType = testHelper.getLabelType(gameHeading);
+
+      var gameComplete = testHelper.isComplete(gameHeading);
+
+      var todaysDate = testHelper.getTodaysDate();
+
       var soldDateTimestamp = testHelper.getSoldDateTimestamp(
-        currentGameElement,
-        dateOfLastSOldItemInDB
+        currentGameElement
       );
 
       // if we should have this item already in DB, then skip onto next item/game
@@ -101,6 +118,8 @@ describe("simple google test", function() {
 
         break;
       }
+
+      var soldDateString = testHelper.getSoldDateString(currentGameElement);
 
       // check to see if any other game appears in title and if it does then we don't want to store this item in the DB
       var insertGameIntoDB = testHelper.checkIfWeShouldStoreGameInDB(
@@ -137,6 +156,14 @@ describe("simple google test", function() {
             consoleToSearch +
             "', `ebayitemurl` = '" +
             gameURL +
+            "', `labeltype` = '" +
+            labelType +
+            "', `complete` = '" +
+            gameComplete +
+            "', `date_added_to_system` = '" +
+            todaysDate +
+            "', `datetimesold_string` = '" +
+            soldDateString +
             "'"
         );
       } else {
