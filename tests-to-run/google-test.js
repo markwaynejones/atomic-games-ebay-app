@@ -30,7 +30,8 @@ describe("simple google test", function() {
         host: "127.0.0.1",
         user: "root",
         password: "",
-        database: "atomic-games"
+        database: "atomic-games",
+        port: "3308"
       })
       .then(function(conn) {
         var result = conn.query(
@@ -134,6 +135,9 @@ describe("simple google test", function() {
         console.log(gameHeading);
         console.log("------------------------------------");
 
+        var totalPriceSoldFor = parseFloat(soldPrice) + parseFloat(postageCost);
+        totalPriceSoldFor = totalPriceSoldFor.toFixed(2);
+
         // insert into DB
         databaseConnection.query(
           "insert into `sold-playstation-one-games` set `name` = '" +
@@ -164,6 +168,8 @@ describe("simple google test", function() {
             todaysDate +
             "', `datetimesold_string` = '" +
             soldDateString +
+            "', `total-price-sold-for` = '" +
+            totalPriceSoldFor +
             "'"
         );
       } else {

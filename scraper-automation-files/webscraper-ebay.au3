@@ -8,10 +8,10 @@ Func Example()
 
     ; Test if the window is activated and display the results.
     If WinActivate("[CLASS:mintty]", "") Then
-        MsgBox($MB_SYSTEMMODAL + $MB_ICONWARNING, "Warning", "Window activated" & @CRLF & @CRLF & "May be your system is pretty fast.")
+        MsgBox($MB_SYSTEMMODAL + $MB_ICONWARNING, "Warning", "Window activated" & @CRLF & @CRLF & "May be your system is pretty fast.", 10)
     Else
         ; Notepad will be displayed as MsgBox introduce a delay and allow it.
-        MsgBox($MB_SYSTEMMODAL, "", "Window not activated" & @CRLF & @CRLF & "But notepad in background due to MsgBox.", 5)
+        MsgBox($MB_SYSTEMMODAL, "", "Window not activated" & @CRLF & @CRLF & "But notepad in background due to MsgBox.", 10)
     EndIf
 
     ; re Test if the window is now activated and display the results.

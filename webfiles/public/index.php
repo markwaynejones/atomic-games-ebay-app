@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /* Working out percantage chance of making a profit based on a price about to bid for
 
@@ -59,7 +59,7 @@ $password = "";
 $dbname = "atomic-games";
 
 // Create connection
-$mysqli = new mysqli($servername, $username, $password, $dbname);
+$mysqli = new mysqli($servername, $username, $password, $dbname, 3308);
 
 // Check connection
 if ($mysqli->connect_error) {
@@ -90,6 +90,8 @@ Array
 )
 
 */
+$numberOfThisGameOnSystem = getNumberItemsOnSystemForGame();
+
 $allRowsGamesFiltered = getAllGamesToUseForStats();
 
 $priceMatrixArray = array(
@@ -121,8 +123,17 @@ foreach ($allRowsGamesFiltered as $gameDetails) {
 
 }
 
-// print_r($priceMatrixArray);
-// die;
+if (isset($_POST['price_risk'])) {
+    // print_r($_POST);
+
+    if(!isset($_POST['label_type_risk'])){ // if no label type chosen throw error
+        $error = "Please choose a label type to get risk details";
+    } else { // else get risk percentage
+        $price_risk_array = getRiskDetails($_POST['price_risk'], $_POST['label_type_risk']);
+    }
+
+    // die;
+}
 
 $markTest = "hello mark";
 $average_prices = getAveragePricesForMonth('October', '2018')
@@ -219,7 +230,43 @@ function drawBasic() {
 
 <body>
 
-<h1>Crash Bandicoot PS1</h1>
+<p><a href="http://atomic-games/all-games-on-system.php">All games on system</a></p>
+
+<h1>Crash Bandicoot PS1 (<?=$numberOfThisGameOnSystem; ?> items for this game on system)</h1>
+
+<img src="resources/crash-bandicoot-ps1.jpg" width="150px" />
+
+<hr />
+
+<h3>Check Risk</h3>
+
+<? if(isset($error)){
+    echo '<p style="color:red !important;">'.$error.'</p>';
+}
+    ?>
+
+<form method="POST" action="http://atomic-games/">
+<p style="margin-bottom:5px;"><strong>Bid Price: </strong><input type="text" <? if(isset($_POST['price_risk'])){ ?> value="<?=$_POST['price_risk']; ?>" <? } ?> name="price_risk" /></p>
+
+<p style="margin-bottom:5px;"><strong>Label Type</strong></p>
+
+<p style="padding-top:0px;margin-top:0px;">Black Label: <input type="radio" name="label_type_risk" value="black" <? if(isset($_POST['label_type_risk']) && $_POST['label_type_risk'] == 'black'){ ?>checked="checked" <? } ?> /><br />Platinum: <input type="radio" name="label_type_risk" value="platinum" <? if(isset($_POST['label_type_risk']) && $_POST['label_type_risk'] == 'platinum'){ ?>checked="checked" <? } ?> /></p>
+
+    <br />
+    <input style="display:block;" type="submit" value="Check Risk" />
+    <br />
+    <? if(isset($price_risk_array)){ ?>
+
+<p><strong>Chance of profit</strong><br />
+If you bid <strong>&pound;<?=$_POST['price_risk'] ?></strong> on <strong>Crash Bandicoot <?=$_POST['label_type_risk'] ?> label</strong>. there is a <strong style="font-size:1.5em;"><?=$price_risk_array['profit_percent'] ?>% chance of profit</strong> <br />(Based on <?=$price_risk_array['based_on_number_of_items'] ?> items)
+</p> 
+
+<? } ?>
+
+
+</form>
+
+<hr />
 
 <h3>Filters / Tags</h3>
 
@@ -365,6 +412,60 @@ function getAllTags() {
     return $allRows;
 }
 
+function getNumberItemsOnSystemForGame(){
+    global $mysqli;
+
+    $sql = "SELECT * FROM `sold-playstation-one-games`"; // will have to do WHERE By on game name eventually
+    
+    $resultFilter = $mysqli->query($sql);
+    $allRows = $resultFilter->fetch_all(MYSQLI_ASSOC);
+
+    return count($allRows);
+}
+
+
+function getRiskDetails($price_to_bid, $label_type){
+    global $mysqli;
+
+    // get all games with this label type
+    $sql = "SELECT *, `sold-playstation-one-games`.`price-sold-for` as price FROM `sold-playstation-one-games` WHERE `labeltype` = '".$label_type."'";
+    $result_games_with_label_type = $mysqli->query($sql);
+    $allGamesWithLabelType = $result_games_with_label_type->fetch_all(MYSQLI_ASSOC);
+
+    // get all games that sold for more than price to bid
+    $sql = "SELECT *, `sold-playstation-one-games`.`price-sold-for` as price FROM `sold-playstation-one-games` WHERE `labeltype` = '".$label_type."' AND `price-sold-for` < '".$price_to_bid."'";
+    $result_games_sold_for_less = $mysqli->query($sql);
+    $allGamesSoldForLess = $result_games_sold_for_less->fetch_all(MYSQLI_ASSOC);
+
+    // echo '<br /><br />';
+
+    // echo 'Number of games with this label type: <br />'.count($allGamesWithLabelType);
+
+    // echo '<br /><br />Number of games that sold for less than &pound;'.$price_to_bid.': <br />'.count($allGamesSoldForLess);
+
+    $numGamesOfThisType = count($allGamesWithLabelType);
+    $numGamesSoldForLess = count($allGamesSoldForLess);
+
+    $percent_loss = round(($numGamesSoldForLess/$numGamesOfThisType) * 100);
+    $percent_profit = 100 - $percent_loss;
+
+    // echo '<br /><br />Percent: <br />';
+    // echo $percent_profit;
+
+    $risk_array = [
+                    "based_on_number_of_items" => $numGamesOfThisType,
+                    "profit_percent" => $percent_profit,
+                    "loss_percent"=> $percent_loss
+                ];
+
+    //             print_r($risk_array);
+
+    // die;
+
+    return $risk_array;
+
+}
+
 function getAllGamesToUseForStats() {
 
     global $mysqli;
@@ -382,7 +483,7 @@ function getAllGamesToUseForStats() {
             $sql = "SELECT *, `sold-playstation-one-games`.`price-sold-for` as price FROM `sold-playstation-one-games` WHERE `complete` = '".$_POST['item_complete']."'";
         }
 
-        echo $sql;
+        // echo $sql;
 
         $resultFilter = $mysqli->query($sql);
 
