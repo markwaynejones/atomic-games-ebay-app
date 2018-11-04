@@ -52,6 +52,15 @@ describe("simple google test", function() {
         }
       });
 
+    while (databaseConnection === false) {
+      console.log("Not connected to database yet");
+      console.log("Waiting for database connection to be established...");
+      browser.pause(30000);
+    }
+    // console.log("var databaseConnection: " + databaseConnection);
+
+    console.log("Database connection established");
+
     //////////////// end of mysql ////////////////
 
     //////////////// start of web scraper ////////////////
@@ -186,7 +195,7 @@ describe("simple google test", function() {
     var siteTitle = browser.getTitle();
     console.log(siteTitle);
 
-    browser.saveScreenshot("./snapshot.png");
+    // browser.saveScreenshot("./snapshot.png");
     // browser.saveElementScreenshot("crash.png", "#mainImgHldr #icImg");
     browser.pause(1000); // need this else below wont assert, still works just wont assert due to image taking time to save screenshot
 
