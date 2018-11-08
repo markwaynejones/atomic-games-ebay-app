@@ -5,16 +5,17 @@ $servername = "localhost";
 $username = "root";
 $password = "";
 $dbname = "atomic-games";
+$port = 3308;
 
 // Create connection
-$mysqli = new mysqli($servername, $username, $password, $dbname);
+$mysqli = new mysqli($servername, $username, $password, $dbname, $port);
 
 // Check connection
 if ($mysqli->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 } 
 
-$sql = "SELECT * FROM `sold-playstation-one-games`";
+$sql = "SELECT * FROM `sold-playstation-one-games` ORDER BY `id`";
     
     $resultFilter = $mysqli->query($sql);
     $allGames = $resultFilter->fetch_all(MYSQLI_ASSOC);
@@ -49,6 +50,7 @@ $sql = "SELECT * FROM `sold-playstation-one-games`";
         <th>Price Sold For</th>
         <th>Postage Cost</th>
         <th>Total Sold For</th>
+        <th>Date Added To System</th>
     </tr>
 
 <? foreach ($allGames as $game) { ?>
@@ -62,6 +64,7 @@ $sql = "SELECT * FROM `sold-playstation-one-games`";
         <td>&pound;<?=$game['price-sold-for']; ?></td>
         <td>&pound;<?=$game['postage-cost']; ?></td>
         <td>&pound;<?=$game['price-sold-for'] + $game['postage-cost']; ?></td>
+        <td><?=$game['date_added_to_system']; ?></td>
     </tr>
 
 <? } ?>

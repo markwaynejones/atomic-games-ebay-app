@@ -27,6 +27,7 @@ module.exports = function TestHelperClass(browserClass) {
   };
 
   this.getLabelType = function(gameHeading) {
+    gameHeading = gameHeading.toLowerCase();
     var platinum = gameHeading.includes("platinum");
 
     if (platinum == true) {
@@ -91,9 +92,9 @@ module.exports = function TestHelperClass(browserClass) {
   this.chooseFiltersInSidebar = function() {
     console.log("Choosing Filters in sidebar");
 
-    this.tickFilterInSidebar("Platform", "Sony PlayStation 1");
+    this.tickFilterInSidebar("Show only", "Sold listings"); // this has been put first as should always be there so the waitforvisible in the function lets us know the page has loaded before doing the below tick filter box functions
 
-    this.tickFilterInSidebar("Show only", "Sold listings");
+    this.tickFilterInSidebar("Platform", "Sony PlayStation 1");
 
     this.tickFilterInSidebar("Item location", "UK Only");
 
@@ -174,21 +175,37 @@ module.exports = function TestHelperClass(browserClass) {
   };
 
   this.tickFilterInSidebar = function(category, filter) {
-    this.browserClass.waitForVisible(
-      "//div[@id='LeftNavContainer']//div[contains(@class,'pnl')]//span//h3[contains(text(),'" +
-        category +
-        "')]/parent::span/parent::div/parent::div//span[text()='" +
-        filter +
-        "']"
-    );
+    var filterVisible;
 
-    this.browserClass.click(
-      "//div[@id='LeftNavContainer']//div[contains(@class,'pnl')]//span//h3[contains(text(),'" +
-        category +
-        "')]/parent::span/parent::div/parent::div//span[text()='" +
-        filter +
-        "']"
-    );
+    if (category != "Platform") {
+      this.browserClass.waitForVisible(
+        "//div[@id='LeftNavContainer']//div[contains(@class,'pnl')]//span//h3[contains(text(),'" +
+          category +
+          "')]/parent::span/parent::div/parent::div//span[text()='" +
+          filter +
+          "']"
+      );
+      filterVisible = true;
+    } else {
+      // else category must be platform which may not always show, so just check if visible and if it is then tick it
+      filterVisible = this.browserClass.isVisible(
+        "//div[@id='LeftNavContainer']//div[contains(@class,'pnl')]//span//h3[contains(text(),'" +
+          category +
+          "')]/parent::span/parent::div/parent::div//span[text()='" +
+          filter +
+          "']"
+      );
+    }
+
+    if (filterVisible === true) {
+      this.browserClass.click(
+        "//div[@id='LeftNavContainer']//div[contains(@class,'pnl')]//span//h3[contains(text(),'" +
+          category +
+          "')]/parent::span/parent::div/parent::div//span[text()='" +
+          filter +
+          "']"
+      );
+    }
   };
 
   this.getGameHeading = function(gameElement) {
@@ -199,6 +216,13 @@ module.exports = function TestHelperClass(browserClass) {
     console.log("Game heading: " + gameHeading);
 
     return gameHeading;
+  };
+
+  this.getGamesToSearchFor = function() {
+    // below will get games from database eventually
+    var games = ["crash bandicoot", "resident evil"];
+
+    return games;
   };
 
   this.getGameURL = function(gameElement) {
@@ -231,7 +255,7 @@ module.exports = function TestHelperClass(browserClass) {
 
     var rejectGame = false;
 
-    var wordsToReject = ["joblot", "job lot", "bundle"];
+    var wordsToReject = ["joblot", "job lot", "bundle", "collection"];
 
     for (i = 0; i < wordsToReject.length; i++) {
       // does the game heading have any reject words and if so then dont insert into DB
@@ -1514,12 +1538,11 @@ module.exports = function TestHelperClass(browserClass) {
       "Refrain Love ~Anata ni Aitai~ Japan only ",
       "Refrain Love 2 Japan only ",
       "Reloaded",
-      "Resident Evil Biohazard in Japan ",
-      "Resident Evil Director s Cut Biohazard Director s Cut in Japan ",
-      "Resident Evil 2 Biohazard 2 in Japan ",
-      "Resident Evil 2 Dual Shock Edition Biohazard 2 Dual Shock Edition in Japan ",
-      "Resident Evil 3 Nemesis Biohazard 3 Last Escape in Japan ",
-      "Resident Evil Survivor Biohazard Gun Survivor in Japan ",
+      "Resident Evil",
+      "Resident Evil 2",
+      "Resident Evil 3",
+      "Resident Evil Nemesis",
+      "Resident Evil Survivor",
       "Retro Force",
       "Return Fire",
       "Revolution X",
@@ -1666,6 +1689,7 @@ module.exports = function TestHelperClass(browserClass) {
       "SpongeBob SquarePants",
       "Sports Car GT",
       "Spot Goes To Hollywood",
+      "Spyro",
       "Spyro The Dragon",
       "Spyro 2 Ripto s Rage!",
       "Spyro Year of the Dragon",

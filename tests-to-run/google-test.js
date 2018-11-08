@@ -45,17 +45,18 @@ describe("simple google test", function() {
         return result;
       })
       .then(function(rows) {
-        if (typeof rows[0] != "undefined") {
-          dateOfLastSOldItemInDB = rows[0].datetimesold;
-        } else {
-          dateOfLastSOldItemInDB = 0;
-        }
+        // if (typeof rows[0] != "undefined") {
+        //   dateOfLastSOldItemInDB = rows[0].datetimesold;
+        // } else {
+        //   dateOfLastSOldItemInDB = 0;
+        // }
       });
 
+    browser.pause(3000);
     while (databaseConnection === false) {
       console.log("Not connected to database yet");
       console.log("Waiting for database connection to be established...");
-      browser.pause(30000);
+      browser.pause(3000);
     }
     // console.log("var databaseConnection: " + databaseConnection);
 
@@ -65,140 +66,181 @@ describe("simple google test", function() {
 
     //////////////// start of web scraper ////////////////
 
-    // go to ebay and search for a game
-    testHelper.searchForGame(gameToSearch, consoleToSearch);
+    var gamesToSearchFor = testHelper.getGamesToSearchFor();
 
-    // choose filters in left sidebar
-    testHelper.chooseFiltersInSidebar();
+    for (x = 0; x < gamesToSearchFor.length; x++) {
+      // start of loop through games to search for
 
-    ///////// Start of looping through games (on page 1) /////////
-    var gameTitles = browser.elements(
-      "//div[@id='ResultSetItems']//ul[@id='ListViewInner']//li[contains(@class,'sresult')]"
-    );
+      gameToSearch = gamesToSearchFor[x];
 
-    console.log("Start looping through each game that has been sold");
+      // start
 
-    // loop through sold ebay listings
-    for (index = 0; index < gameTitles.value.length; ++index) {
-      var currentGameElement = gameTitles.value[index];
+      var dateOfLastSOldItemInDB = false;
 
-      var gameHeading = testHelper.getGameHeading(currentGameElement);
-
-      var rejectGame = testHelper.checkRejectItem(gameHeading);
-
-      if (rejectGame == true) {
-        console.log(
-          "Rejecting the following ebay item/game has it includes words to reject in its heading:"
-        );
-        console.log(gameHeading);
-        console.log("Moving onto next ebay item");
-        console.log("--------------------");
-        continue;
-      }
-
-      var gameURL = testHelper.getGameURL(currentGameElement);
-
-      var soldPrice = testHelper.getSoldPrice(currentGameElement);
-
-      var postageCost = testHelper.getPostageCost(currentGameElement);
-
-      var numberOfBids = testHelper.getNumberOfBids(currentGameElement);
-
-      var imageSrc = testHelper.getImageSrc(currentGameElement);
-
-      var labelType = testHelper.getLabelType(gameHeading);
-
-      var gameComplete = testHelper.isComplete(gameHeading);
-
-      var todaysDate = testHelper.getTodaysDate();
-
-      var soldDateTimestamp = testHelper.getSoldDateTimestamp(
-        currentGameElement
-      );
-
-      // if we should have this item already in DB, then skip onto next item/game
-      if (soldDateTimestamp <= dateOfLastSOldItemInDB) {
-        console.log(
-          "Not inserting game '" +
-            gameHeading +
-            "' because it should already be inserted based on its time/date it was sold."
-        );
-
-        console.log("Breaking out of loop and ending application.");
-
-        break;
-      }
-
-      var soldDateString = testHelper.getSoldDateString(currentGameElement);
-
-      // check to see if any other game appears in title and if it does then we don't want to store this item in the DB
-      var insertGameIntoDB = testHelper.checkIfWeShouldStoreGameInDB(
-        gameHeading,
-        gameToSearch
-      );
-
-      console.log("--------------- End of Refactor Code ---------------");
-
-      if (insertGameIntoDB === true) {
-        console.log("Inserting below game into database");
-        console.log(gameHeading);
-        console.log("------------------------------------");
-
-        var totalPriceSoldFor = parseFloat(soldPrice) + parseFloat(postageCost);
-        totalPriceSoldFor = totalPriceSoldFor.toFixed(2);
-
-        // insert into DB
-        databaseConnection.query(
-          "insert into `sold-playstation-one-games` set `name` = '" +
-            gameHeading +
-            "', `price-sold-for` = '" +
-            soldPrice +
-            "', `datetimesold` = '" +
-            soldDateTimestamp +
-            "', `number-of-bids` = '" +
-            numberOfBids +
-            "', `postage-cost` = '" +
-            postageCost +
-            "', `imageSrc` = '" +
-            imageSrc +
-            "', `searchquery` = '" +
-            searchQuery +
-            "', `gamename` = '" +
+      databaseConnection
+        .query(
+          // "select `name` from `sold-playstation-one-games`"
+          "SELECT `datetimesold` from `sold-playstation-one-games` WHERE gamename = '" +
             gameToSearch +
-            "', `console` = '" +
-            consoleToSearch +
-            "', `ebayitemurl` = '" +
-            gameURL +
-            "', `labeltype` = '" +
-            labelType +
-            "', `complete` = '" +
-            gameComplete +
-            "', `date_added_to_system` = '" +
-            todaysDate +
-            "', `datetimesold_string` = '" +
-            soldDateString +
-            "', `total-price-sold-for` = '" +
-            totalPriceSoldFor +
-            "'"
-        );
-      } else {
-        console.log("Not inserting below game into database");
-        console.log(gameHeading);
-        console.log("------------------------------------");
+            "' order by `datetimesold` desc limit 1"
+        )
+        .then(function(result) {
+          if (typeof result[0] != "undefined") {
+            dateOfLastSOldItemInDB = result[0].datetimesold;
+          } else {
+            dateOfLastSOldItemInDB = 0;
+          }
+        });
+
+      while (dateOfLastSOldItemInDB === false) {
+        console.log("Select SQL query not excecuted yet");
+        console.log("Waiting for SQL query to be executed...");
+        browser.pause(3000);
       }
 
-      browser.pause(2000);
-    } // end loop through sold ebay listings
+      console.log("var dateOfLastSOldItemInDB: " + dateOfLastSOldItemInDB);
 
-    ///////// End of looping through games (on page 1) /////////
+      // end
 
-    var siteTitle = browser.getTitle();
-    console.log(siteTitle);
+      // go to ebay and search for a game
+      testHelper.searchForGame(gameToSearch, consoleToSearch);
 
-    // browser.saveScreenshot("./snapshot.png");
-    // browser.saveElementScreenshot("crash.png", "#mainImgHldr #icImg");
-    browser.pause(1000); // need this else below wont assert, still works just wont assert due to image taking time to save screenshot
+      // choose filters in left sidebar
+      testHelper.chooseFiltersInSidebar();
 
-    //////////////// end of web scraper ////////////////
+      ///////// Start of looping through games (on page 1) /////////
+      var gameTitles = browser.elements(
+        "//div[@id='ResultSetItems']//ul[@id='ListViewInner']//li[contains(@class,'sresult')]"
+      );
+
+      console.log("Start looping through each game that has been sold");
+
+      // loop through sold ebay listings
+      for (index = 0; index < gameTitles.value.length; ++index) {
+        var currentGameElement = gameTitles.value[index];
+
+        var gameHeading = testHelper.getGameHeading(currentGameElement);
+
+        var rejectGame = testHelper.checkRejectItem(gameHeading);
+
+        if (rejectGame == true) {
+          console.log(
+            "Rejecting the following ebay item/game has it includes words to reject in its heading:"
+          );
+          console.log(gameHeading);
+          console.log("Moving onto next ebay item");
+          console.log("--------------------");
+          continue;
+        }
+
+        var gameURL = testHelper.getGameURL(currentGameElement);
+
+        var soldPrice = testHelper.getSoldPrice(currentGameElement);
+
+        var postageCost = testHelper.getPostageCost(currentGameElement);
+
+        var numberOfBids = testHelper.getNumberOfBids(currentGameElement);
+
+        var imageSrc = testHelper.getImageSrc(currentGameElement);
+
+        var labelType = testHelper.getLabelType(gameHeading);
+
+        var gameComplete = testHelper.isComplete(gameHeading);
+
+        var todaysDate = testHelper.getTodaysDate();
+
+        var soldDateTimestamp = testHelper.getSoldDateTimestamp(
+          currentGameElement
+        );
+
+        // if we should have this item already in DB, then skip onto next item/game
+        if (soldDateTimestamp <= dateOfLastSOldItemInDB) {
+          console.log(
+            "Not inserting game '" +
+              gameHeading +
+              "' because it should already be inserted based on its time/date it was sold."
+          );
+
+          console.log("Breaking out of loop and ending application.");
+
+          break;
+        }
+
+        var soldDateString = testHelper.getSoldDateString(currentGameElement);
+
+        // check to see if any other game appears in title and if it does then we don't want to store this item in the DB
+        var insertGameIntoDB = testHelper.checkIfWeShouldStoreGameInDB(
+          gameHeading,
+          gameToSearch
+        );
+
+        console.log("--------------- End of Refactor Code ---------------");
+
+        if (insertGameIntoDB === true) {
+          console.log("Inserting below game into database");
+          console.log(gameHeading);
+          console.log("------------------------------------");
+
+          // replace single quotes (') as was breaking sql
+          gameHeading = gameHeading.replace("'", "");
+
+          var totalPriceSoldFor =
+            parseFloat(soldPrice) + parseFloat(postageCost);
+          totalPriceSoldFor = totalPriceSoldFor.toFixed(2);
+
+          // insert into DB
+          databaseConnection.query(
+            "insert into `sold-playstation-one-games` set `name` = '" +
+              gameHeading +
+              "', `price-sold-for` = '" +
+              soldPrice +
+              "', `datetimesold` = '" +
+              soldDateTimestamp +
+              "', `number-of-bids` = '" +
+              numberOfBids +
+              "', `postage-cost` = '" +
+              postageCost +
+              "', `imageSrc` = '" +
+              imageSrc +
+              "', `searchquery` = '" +
+              searchQuery +
+              "', `gamename` = '" +
+              gameToSearch +
+              "', `console` = '" +
+              consoleToSearch +
+              "', `ebayitemurl` = '" +
+              gameURL +
+              "', `labeltype` = '" +
+              labelType +
+              "', `complete` = '" +
+              gameComplete +
+              "', `date_added_to_system` = '" +
+              todaysDate +
+              "', `datetimesold_string` = '" +
+              soldDateString +
+              "', `total-price-sold-for` = '" +
+              totalPriceSoldFor +
+              "'"
+          );
+        } else {
+          console.log("Not inserting below game into database");
+          console.log(gameHeading);
+          console.log("------------------------------------");
+        }
+
+        browser.pause(2000);
+      } // end loop through sold ebay listings
+
+      ///////// End of looping through games (on page 1) /////////
+
+      var siteTitle = browser.getTitle();
+      console.log(siteTitle);
+
+      // browser.saveScreenshot("./snapshot.png");
+      // browser.saveElementScreenshot("crash.png", "#mainImgHldr #icImg");
+      browser.pause(1000); // need this else below wont assert, still works just wont assert due to image taking time to save screenshot
+
+      //////////////// end of web scraper ////////////////
+    } // end of loop through games to search for
   });
 });

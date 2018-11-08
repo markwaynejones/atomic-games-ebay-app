@@ -1,0 +1,6 @@
+SELECT locations.* FROM `atomic-games`.locations_tag
+INNER JOIN `atomic-games`.locations ON locations_tag.location_id = locations.id
+INNER JOIN `atomic-games`.tags_lucia ON locations_tag.tag_id = tags_lucia.id
+WHERE tags_lucia.slug = 'indoor-market' OR tags_lucia.slug = 'history' OR tags_lucia.slug = 'art'
+GROUP BY name
+HAVING count(DISTINCT locations_tag.location_id, locations_tag.tag_id) = 3;
