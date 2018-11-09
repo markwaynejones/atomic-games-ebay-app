@@ -73,6 +73,19 @@ describe("simple google test", function() {
 
       gameToSearch = gamesToSearchFor[x];
 
+      console.log(
+        "Start searching for sold '" +
+          gameToSearch +
+          " " +
+          consoleToSearch +
+          "' games."
+      );
+
+      var rejectionWords = testHelper.getRejectionWords(
+        gameToSearch,
+        databaseConnection
+      );
+
       // start
 
       var dateOfLastSOldItemInDB = false;
@@ -93,12 +106,12 @@ describe("simple google test", function() {
         });
 
       while (dateOfLastSOldItemInDB === false) {
-        console.log("Select SQL query not excecuted yet");
-        console.log("Waiting for SQL query to be executed...");
+        // console.log("Select SQL query not excecuted yet");
+        // console.log("Waiting for SQL query to be executed...");
         browser.pause(3000);
       }
 
-      console.log("var dateOfLastSOldItemInDB: " + dateOfLastSOldItemInDB);
+      // console.log("var dateOfLastSOldItemInDB: " + dateOfLastSOldItemInDB);
 
       // end
 
@@ -121,12 +134,15 @@ describe("simple google test", function() {
 
         var gameHeading = testHelper.getGameHeading(currentGameElement);
 
-        var rejectGame = testHelper.checkRejectItem(gameHeading);
+        var rejectGame = testHelper.checkRejectItem(
+          gameHeading,
+          rejectionWords
+        );
 
         if (rejectGame == true) {
-          console.log(
-            "Rejecting the following ebay item/game has it includes words to reject in its heading:"
-          );
+          // console.log(
+          //   "Rejecting the following ebay item/game has it includes words to reject in its heading:"
+          // );
           console.log(gameHeading);
           console.log("Moving onto next ebay item");
           console.log("--------------------");
@@ -173,8 +189,6 @@ describe("simple google test", function() {
           gameHeading,
           gameToSearch
         );
-
-        console.log("--------------- End of Refactor Code ---------------");
 
         if (insertGameIntoDB === true) {
           console.log("Inserting below game into database");
@@ -234,13 +248,25 @@ describe("simple google test", function() {
       ///////// End of looping through games (on page 1) /////////
 
       var siteTitle = browser.getTitle();
-      console.log(siteTitle);
+      // console.log(siteTitle);
 
       // browser.saveScreenshot("./snapshot.png");
       // browser.saveElementScreenshot("crash.png", "#mainImgHldr #icImg");
       browser.pause(1000); // need this else below wont assert, still works just wont assert due to image taking time to save screenshot
 
+      console.log(
+        "Finished searching for sold '" +
+          gameToSearch +
+          " " +
+          consoleToSearch +
+          "' games"
+      );
+      console.log(
+        "---------------------------------------------------------------------"
+      );
+
       //////////////// end of web scraper ////////////////
     } // end of loop through games to search for
+    console.log("Scraper Finished");
   });
 });

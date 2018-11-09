@@ -250,22 +250,55 @@ module.exports = function TestHelperClass(browserClass) {
     return soldPrice;
   };
 
-  this.checkRejectItem = function(gameHeading) {
+  this.checkRejectItem = function(gameHeading, rejectionWords) {
     gameHeading = gameHeading.toLowerCase();
 
     var rejectGame = false;
 
-    var wordsToReject = ["joblot", "job lot", "bundle", "collection"];
+    // var rejectionWords = ["joblot", "job lot", "bundle", "collection"];
 
-    for (i = 0; i < wordsToReject.length; i++) {
+    for (i = 0; i < rejectionWords.length; i++) {
       // does the game heading have any reject words and if so then dont insert into DB
-      rejectGame = gameHeading.includes(wordsToReject[i]);
+      rejectGame = gameHeading.includes(rejectionWords[i]);
 
       if (rejectGame == true) {
+        console.log(
+          "Not inserting this game as its heading includes the following rejected word: " +
+            rejectionWords[i]
+        );
         break;
       }
     }
     return rejectGame;
+  };
+
+  this.getRejectionWords = function(gameHeading, databaseConnection) {
+    var wordsToReject = ["joblot", "job lot", "bundle", "collection"];
+
+    var result = false;
+    // check rejection words for this specific game in database
+    databaseConnection
+      .query(
+        // "select `name` from `sold-playstation-one-games`"
+        "SELECT `rejection_word` FROM `game_rejection_words` WHERE `game_name` = '" +
+          gameHeading +
+          "'"
+      )
+      .then(function(rows) {
+        result = rows;
+      });
+
+    this.browserClass.pause(2000);
+
+    while (result === false) {
+      this.browserClass.pause(3000);
+    }
+
+    for (y = 0; y < result.length; y++) {
+      wordsToReject.push(result[y]["rejection_word"]);
+    }
+
+    return wordsToReject;
   };
 
   this.getPostageCost = function(gameElement) {
@@ -354,20 +387,20 @@ module.exports = function TestHelperClass(browserClass) {
     // heading didnt have a space as was adding games like crashbandicoot warped when it shouldn't have
     gameToSearchNoSpaces = gameToSearch.replace(" ", "");
     gameHeadingLowerCase = gameHeading.toLowerCase();
-    console.log(
-      "Is " + gameToSearchNoSpaces + " inside " + gameHeadingLowerCase
-    );
+    // console.log(
+    //   "Is " + gameToSearchNoSpaces + " inside " + gameHeadingLowerCase
+    // );
     if (gameHeadingLowerCase.includes(gameToSearchNoSpaces)) {
       gameHeading = gameHeadingLowerCase.replace(
         gameToSearchNoSpaces,
         gameToSearch
       );
-      console.log(
-        "yes it is so replacing game heading to be the following instead: "
-      );
-      console.log(gameHeading);
+      // console.log(
+      //   "yes it is so replacing game heading to be the following instead: "
+      // );
+      // console.log(gameHeading);
     } else {
-      console.log("no it isnt in there");
+      // console.log("no it isnt in there");
     }
 
     var gameHeadingReplacedSpecialChars = gameHeading;
@@ -1413,7 +1446,7 @@ module.exports = function TestHelperClass(browserClass) {
       "Ojyousama Express Japan only ",
       "Olympic Summer Games",
       "Omega Boost",
-      "One",
+      // "One",
       "One Piece Mansion",
       "Onside Soccer",
       "Overblood",
